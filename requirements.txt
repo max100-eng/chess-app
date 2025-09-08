@@ -5,3 +5,4 @@ streamlit
 python-chess
 stockfish
 pycairo
+cairosvg
