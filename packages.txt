@@ -1,2 +1,4 @@
 libcairo2
 libxml2
+libxml2-dev
+pkg-config
