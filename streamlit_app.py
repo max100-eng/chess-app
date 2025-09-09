@@ -15,6 +15,7 @@ if "stockfish" not in st.session_state:
         st.session_state.stockfish = Stockfish(path="stockfish-ubuntu-x86-64-avx2")
     except FileNotFoundError:
         # Mensaje de error corregido
+
         st.error("Error: No se encontró el archivo ejecutable de Stockfish. Asegúrate de que 'stockfish-ubuntu-x86-64-avx2' esté en la misma carpeta.")
         st.session_state.stockfish = None
 
