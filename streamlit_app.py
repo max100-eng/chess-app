@@ -4,7 +4,6 @@ from stockfish import Stockfish
 import chess.svg
 import io
 import cairosvg # Asegúrate de que esta librería esté instalada
-
 # Título de la aplicación
 st.title("Ajedrez con Asistente de IA")
 
@@ -73,7 +72,6 @@ from stockfish import Stockfish
 import chess.svg
 import io
 import cairosvg # Asegúrate de que esta librería esté instalada
-
 # Título de la aplicación
 st.title("Ajedrez con Asistente de IA")
 
