@@ -3,7 +3,9 @@ import chess
 from stockfish import Stockfish
 import chess.svg
 import io
-import cairosvg # Asegúrate de que esta librería esté instalada
+import cairosvg 
+import os
+import stat
 
 # Título de la aplicación
 st.title("Ajedrez con Asistente de IA")
@@ -11,10 +13,18 @@ st.title("Ajedrez con Asistente de IA")
 # Inicializar Stockfish si no está ya en la sesión
 if "stockfish" not in st.session_state:
     try:
-        # Usar el ejecutable de Linux que subiste
-        st.session_state.stockfish = Stockfish(path="stockfish-ubuntu-x86-64-avx2")
+        # Intenta dar permisos de ejecución al archivo Stockfish
+        stockfish_path = "stockfish-ubuntu-x86-64-avx2"
+        if os.path.exists(stockfish_path):
+            try:
+                # Comprobar permisos actuales y añadir los de ejecución
+                current_permissions = os.stat(stockfish_path).st_mode
+                os.chmod(stockfish_path, current_permissions | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
+            except Exception as e:
+                st.warning(f"No se pudieron establecer los permisos de ejecución: {e}")
+        
+        st.session_state.stockfish = Stockfish(path=stockfish_path)
     except FileNotFoundError:
-        # Mensaje de error corregido
         st.error("Error: No se encontró el archivo ejecutable de Stockfish. Asegúrate de que 'stockfish-ubuntu-x86-64-avx2' esté en la misma carpeta.")
         st.session_state.stockfish = None
 
@@ -30,14 +40,9 @@ def reset_board():
 
 def show_board_as_image(board):
     """Genera el tablero como una imagen PNG a partir de los datos SVG."""
-    # Genera el SVG como una cadena de texto
     board_svg = chess.svg.board(board=board)
-    
-    # Convierte la cadena SVG a bytes PNG usando cairosvg
     png_bytes = cairosvg.svg2png(bytestring=board_svg.encode("utf-8"))
-    
-    # Muestra los bytes PNG en Streamlit
-    st.image(png_bytes, use_container_width=True)
+    st.image(png_bytes, width="stretch") # Corregido para Streamlit 1.25+
 
 def make_stockfish_move():
     """Ejecuta el mejor movimiento sugerido por Stockfish."""
@@ -54,7 +59,6 @@ def make_stockfish_move():
 
 # --- Interfaz de Streamlit ---
 
-# Muestra el tablero de ajedrez como una imagen SVG
 show_board_as_image(st.session_state.board)
 
 # Botones de acción
@@ -68,5 +72,5 @@ with col2:
 if st.session_state.stockfish:
     st.text("Análisis de la posición por Stockfish:")
     st.session_state.stockfish.set_fen_position(st.session_state.board.fen())
-    best_move_suggestion = st.session_state.stockfish.get_best_move_time(1000) # 1 segundo de análisis
+    best_move_suggestion = st.session_state.stockfish.get_best_move_time(1000) 
     st.info(f"El mejor movimiento sugerido es: {best_move_suggestion}")
