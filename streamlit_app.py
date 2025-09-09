@@ -57,7 +57,7 @@ show_board_as_image(st.session_state.board)
 # Botones de acción
 col1, col2 = st.columns(2)
 with col1:
-    st.button("Reiniciar Tablero", on_click=reset_board)
+    st.button("Reiniciar Tablero", on_click=reset_board, key="reiniciar_button")
 with col2:
     st.button("Mover con Stockfish", on_click=make_stockfish_move)
 
