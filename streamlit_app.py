@@ -15,12 +15,11 @@ def init_stockfish_engine():
         # Crea una instancia de Stockfish. La librería se encarga de encontrar el binario.
         stockfish_engine = stockfish.Stockfish()
         
-        # Para obtener el path y usarlo con chess.engine
-        engine_path = stockfish_engine.get_stockfish_path()
-        engine = chess.engine.popen_uci(engine_path)
+        # Opcional: Establecer un nivel de fuerza (valor entre 1 y 20)
+        stockfish_engine.set_skill_level(10)
         
         st.success("Stockfish iniciado correctamente.")
-        return engine
+        return stockfish_engine # Devuelve el objeto Stockfish
     except Exception as e:
         st.error(f"Error al iniciar Stockfish: {e}. "
                  "Asegúrate de que la librería 'python-stockfish' se instaló correctamente.")
@@ -72,11 +71,15 @@ st.subheader("Turno de la IA")
 if st.button("Hacer Movimiento de la IA"):
     if not st.session_state.board.is_game_over():
         with st.spinner("La IA está pensando..."):
-            limit = chess.engine.Limit(time=0.5)
-            result = engine.play(st.session_state.board, limit=limit)
-            st.session_state.board.push(result.move)
-            st.success(f"La IA movió: {result.move.uci()}")
-            st.rerun()
+            # Obtiene el mejor movimiento de Stockfish
+            best_move = engine.get_best_move()
+            if best_move:
+                move = chess.Move.from_uci(best_move)
+                st.session_state.board.push(move)
+                st.success(f"La IA movió: {move.uci()}")
+                st.rerun()
+            else:
+                st.warning("La IA no pudo encontrar un movimiento válido.")
     else:
         st.info("La partida ha terminado. No se pueden hacer más movimientos.")
 
