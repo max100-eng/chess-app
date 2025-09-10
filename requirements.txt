@@ -3,6 +3,6 @@ python-chess
 stockfish
 pycairo
 cairosvg
-
+python-stockfish==3.2.0
 
 

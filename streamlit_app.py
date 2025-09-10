@@ -4,68 +4,48 @@ import chess.engine
 import os
 from io import BytesIO
 import chess.svg
-import cairosvg # Importa la librería para convertir SVG a PNG
-
-# --- CONFIGURACIÓN PARA STOCKFISH EN STREAMLIT CLOUD ---
-# En Streamlit Cloud, el repositorio se clona en /app.
-# Asegúrate de que el binario de Stockfish para Linux esté en la raíz de tu repositorio
-# y se llame simplemente 'stockfish'.
-STOCKFISH_PATH = "/app/stockfish" 
+import cairosvg 
+import stockfish # Importa la librería python-stockfish
 
 # --- FUNCIÓN PARA INICIALIZAR EL MOTOR STOCKFISH ---
-# Usa st.cache_resource para que el motor se inicialice solo una vez por despliegue.
 @st.cache_resource
-def init_stockfish_engine(path):
-    st.info("Intentando iniciar Stockfish...")
-    
-    # Verificar si el archivo Stockfish existe en la ruta especificada
-    if not os.path.exists(path):
-        st.error(f"Error: No se encontró el archivo ejecutable de Stockfish en '{path}'.")
-        st.stop() # Detiene la aplicación si el binario no está
-
+def init_stockfish_engine():
+    st.info("Intentando iniciar Stockfish a través de la librería python-stockfish...")
     try:
-        # Intenta iniciar el motor Stockfish usando la interfaz UCI
-        engine = chess.engine.popen_uci(path)
+        # Crea una instancia de Stockfish. La librería se encarga de encontrar el binario.
+        stockfish_engine = stockfish.Stockfish()
+        
+        # Para obtener el path y usarlo con chess.engine
+        engine_path = stockfish_engine.get_stockfish_path()
+        engine = chess.engine.popen_uci(engine_path)
+        
         st.success("Stockfish iniciado correctamente.")
         return engine
     except Exception as e:
-        # Captura cualquier error durante la inicialización de Stockfish
-        st.error(f"Error al iniciar Stockfish desde '{path}': {e}. "
-                 "Asegúrate de que el archivo es un ejecutable válido para Linux y tiene permisos. "
-                 "Verifica que el 'pre_run_script' en .streamlit/config.toml sea correcto.")
-        st.stop() # Detiene la aplicación si el motor no se puede iniciar
+        st.error(f"Error al iniciar Stockfish: {e}. "
+                 "Asegúrate de que la librería 'python-stockfish' se instaló correctamente.")
+        st.stop()
 
 # --- FUNCIÓN PARA GENERAR LA IMAGEN DEL TABLERO ---
-# Convierte el estado actual del tablero de ajedrez a una imagen PNG en bytes.
 def get_board_image(board):
-    # Genera el tablero como una cadena SVG
     board_svg = chess.svg.board(board=board)
-    
-    # Convierte la cadena SVG a un objeto BytesIO que contiene la imagen PNG
-    # Esto es necesario porque st.image espera un formato de imagen rasterizado (como PNG),
-    # no un SVG directo.
     png_output = BytesIO()
     cairosvg.svg2png(bytestring=board_svg.encode("utf-8"), write_to=png_output)
-    png_output.seek(0) # Vuelve al inicio del stream de bytes para que st.image lo lea correctamente
+    png_output.seek(0)
     return png_output
 
 # --- TÍTULO DE LA APLICACIÓN ---
 st.title("Ajedrez con Asistente de IA")
 
 # --- INICIALIZAR EL MOTOR STOCKFISH ---
-# Llama a la función para inicializar el motor Stockfish.
-# Esto se ejecuta solo una vez al iniciar la aplicación.
-engine = init_stockfish_engine(STOCKFISH_PATH)
+engine = init_stockfish_engine()
 
 # --- INICIALIZAR EL ESTADO DE LA PARTIDA ---
-# 'st.session_state' se usa para que el estado del tablero persista entre las interacciones.
 if 'board' not in st.session_state:
-    st.session_state.board = chess.Board() # Crea un nuevo tablero al inicio
+    st.session_state.board = chess.Board()
 
 # --- MOSTRAR EL TABLERO ---
-# Obtiene la imagen del tablero actual y la muestra en la aplicación.
 png_bytes = get_board_image(st.session_state.board)
-# 'use_container_width=True' hace que la imagen se ajuste al ancho disponible.
 st.image(png_bytes, use_container_width=True) 
 
 # --- LÓGICA PARA LOS MOVIMIENTOS DEL JUGADOR ---
@@ -75,13 +55,11 @@ player_move_uci = st.text_input("Ingresa tu movimiento (formato UCI, ej. e2e4):"
 if st.button("Hacer Movimiento del Jugador"):
     if player_move_uci:
         try:
-            # Intenta crear un objeto Move a partir del string UCI
             move = chess.Move.from_uci(player_move_uci)
-            # Verifica si el movimiento es legal en el tablero actual
             if move in st.session_state.board.legal_moves:
-                st.session_state.board.push(move) # Realiza el movimiento
+                st.session_state.board.push(move)
                 st.info(f"Has movido: {move.uci()}")
-                st.rerun() # Vuelve a ejecutar la aplicación para actualizar el tablero
+                st.rerun()
             else:
                 st.error("Movimiento ilegal. Por favor, intenta un movimiento válido.")
         except ValueError:
@@ -92,18 +70,13 @@ if st.button("Hacer Movimiento del Jugador"):
 # --- LÓGICA PARA EL MOVIMIENTO DE LA IA (STOCKFISH) ---
 st.subheader("Turno de la IA")
 if st.button("Hacer Movimiento de la IA"):
-    # Verifica si la partida ha terminado antes de pedir un movimiento a la IA
     if not st.session_state.board.is_game_over():
         with st.spinner("La IA está pensando..."):
-            # Define el límite de tiempo o profundidad para el cálculo de Stockfish.
-            # Mayor tiempo/profundidad = IA más fuerte pero más lenta.
-            limit = chess.engine.Limit(time=0.5) # La IA piensa por 0.5 segundos
-            
-            # Obtiene el mejor movimiento de Stockfish
+            limit = chess.engine.Limit(time=0.5)
             result = engine.play(st.session_state.board, limit=limit)
-            st.session_state.board.push(result.move) # Realiza el movimiento de la IA
+            st.session_state.board.push(result.move)
             st.success(f"La IA movió: {result.move.uci()}")
-            st.rerun() # Vuelve a ejecutar la aplicación para actualizar el tablero
+            st.rerun()
     else:
         st.info("La partida ha terminado. No se pueden hacer más movimientos.")
 
@@ -124,6 +97,6 @@ else:
 
 # --- BOTÓN PARA REINICIAR LA PARTIDA ---
 if st.button("Reiniciar Partida"):
-    st.session_state.board = chess.Board() # Crea un tablero nuevo
+    st.session_state.board = chess.Board()
     st.success("Partida reiniciada.")
-    st.rerun() # Vuelve a ejecutar la aplicación para mostrar el tablero inicial
+    st.rerun()
