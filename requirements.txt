@@ -3,4 +3,8 @@ python-chess
 stockfish
 pycairo
 cairosvg
+streamlit
+chess # Si usas python-chess
+python-stockfish
+
 
