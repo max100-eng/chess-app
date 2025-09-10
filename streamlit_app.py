@@ -1,76 +1,94 @@
 import streamlit as st
 import chess
-from stockfish import Stockfish
-import chess.svg
-import io
-import cairosvg 
+import chess.engine
 import os
-import stat
+from io import BytesIO
+import chess.svg # Necesario para dibujar el tablero
 
-# Título de la aplicación
+# --- Configuración del motor Stockfish ---
+STOCKFISH_PATH = "./stockfish" # Apunta directamente al archivo binario renombrado
+
+# Función para inicializar Stockfish
+@st.cache_resource
+def init_stockfish_engine(path):
+    st.info("Intentando iniciar Stockfish...")
+    if not os.path.exists(path):
+        st.error(f"Error: No se encontró el archivo ejecutable de Stockfish en '{path}'.")
+        st.stop() # Detener la app si no se encuentra
+    
+    try:
+        # Aquí se inicia el motor
+        engine = chess.engine.popen_uci(path)
+        st.success("Stockfish iniciado correctamente.")
+        return engine
+    except Exception as e:
+        st.error(f"Error al iniciar Stockfish desde '{path}': {e}. "
+                 "Asegúrate de que el archivo es un ejecutable válido para Linux y tiene permisos.")
+        st.stop()
+
+# --- Función para dibujar el tablero (solución NameError: png_bytes) ---
+def get_board_image(board):
+    # Genera el SVG del tablero
+    board_svg = chess.svg.board(board=board)
+    # Convierte el SVG a bytes, esto es lo que st.image espera
+    return BytesIO(board_svg.encode("utf-8"))
+
+# --- Lógica principal de la aplicación ---
 st.title("Ajedrez con Asistente de IA")
 
-# Inicializar Stockfish si no está ya en la sesión
-if "stockfish" not in st.session_state:
-    try:
-        # Intenta dar permisos de ejecución al archivo Stockfish
-        stockfish_path = "stockfish-ubuntu-x86-64-avx2"
-        if os.path.exists(stockfish_path):
-            try:
-                # Comprobar permisos actuales y añadir los de ejecución
-                current_permissions = os.stat(stockfish_path).st_mode
-                os.chmod(stockfish_path, current_permissions | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
-            except Exception as e:
-                st.warning(f"No se pudieron establecer los permisos de ejecución: {e}")
-        
-        st.session_state.stockfish = Stockfish(path=stockfish_path)
-    except FileNotFoundError:
-        st.error("Error: No se encontró el archivo ejecutable de Stockfish. Asegúrate de que 'stockfish-ubuntu-x86-64-avx2' esté en la misma carpeta.")
-        st.session_state.stockfish = None
+# Inicializar el motor Stockfish al inicio de la app
+engine = init_stockfish_engine(STOCKFISH_PATH)
 
-# Inicializar el tablero de ajedrez
-if "board" not in st.session_state:
+# Inicializar el estado de la partida
+if 'board' not in st.session_state:
     st.session_state.board = chess.Board()
 
-# --- Funciones del tablero y movimientos ---
+# Mostrar el tablero
+png_bytes = get_board_image(st.session_state.board)
+st.image(png_bytes, use_column_width=True)
 
-def reset_board():
-    """Reinicia el tablero a su posición inicial."""
-    st.session_state.board = chess.Board()
+# Lógica para los movimientos del jugador
+player_move_uci = st.text_input("Tu movimiento (ej. e2e4):")
+if st.button("Hacer Movimiento del Jugador"):
+    if player_move_uci:
+        try:
+            move = chess.Move.from_uci(player_move_uci)
+            if move in st.session_state.board.legal_moves:
+                st.session_state.board.push(move)
+                st.rerun() # Volver a ejecutar para actualizar el tablero
+            else:
+                st.error("Movimiento ilegal. Intenta de nuevo.")
+        except ValueError:
+            st.error("Formato de movimiento incorrecto (ej. e2e4).")
 
-def show_board_as_image(board):
-    """Genera el tablero como una imagen PNG a partir de los datos SVG."""
-    board_svg = chess.svg.board(board=board)
-    png_bytes = cairosvg.svg2png(bytestring=board_svg.encode("utf-8"))
-    st.image(png_bytes, width="stretch") # Corregido para Streamlit 1.25+
-
-def make_stockfish_move():
-    """Ejecuta el mejor movimiento sugerido por Stockfish."""
-    if st.session_state.stockfish:
-        best_move_uci = st.session_state.stockfish.get_best_move_time(1000)
-        best_move = chess.Move.from_uci(best_move_uci)
-        if best_move in st.session_state.board.legal_moves:
-            st.session_state.board.push(best_move)
-            st.success(f"Stockfish movió: {best_move_uci}")
-        else:
-            st.warning("Stockfish sugirió un movimiento ilegal. Vuelve a intentarlo.")
+# Lógica para el movimiento de la IA (Stockfish)
+if st.button("Movimiento de la IA"):
+    if not st.session_state.board.is_game_over():
+        with st.spinner("La IA está pensando..."):
+            # Configura la dificultad (puedes hacer esto una opción de usuario)
+            limit = chess.engine.Limit(time=0.5) # La IA piensa por 0.5 segundos
+            
+            result = engine.play(st.session_state.board, limit=limit)
+            st.session_state.board.push(result.move)
+            st.success(f"La IA movió: {result.move.uci()}")
+            st.rerun()
     else:
-        st.error("Stockfish no está disponible.")
+        st.info("La partida ha terminado.")
 
-# --- Interfaz de Streamlit ---
+# Detectar fin de partida
+if st.session_state.board.is_checkmate():
+    st.success("¡Jaque Mate! La partida ha terminado.")
+elif st.session_state.board.is_stalemate():
+    st.info("¡Tablas por ahogado! La partida ha terminado.")
+elif st.session_state.board.is_insufficient_material():
+    st.info("¡Tablas por material insuficiente! La partida ha terminado.")
+elif st.session_state.board.is_seventyfive_moves():
+    st.info("¡Tablas por regla de los 75 movimientos! La partida ha terminado.")
+elif st.session_state.board.is_fivefold_repetition():
+    st.info("¡Tablas por repetición quíntuple! La partida ha terminado.")
 
-show_board_as_image(st.session_state.board)
-
-# Botones de acción
-col1, col2 = st.columns(2)
-with col1:
-    st.button("Reiniciar Tablero", on_click=reset_board, key="reset_board_button")
-with col2:
-    st.button("Mover con Stockfish", on_click=make_stockfish_move, key="stockfish_move_button")
-
-# Pedir sugerencia a Stockfish
-if st.session_state.stockfish:
-    st.text("Análisis de la posición por Stockfish:")
-    st.session_state.stockfish.set_fen_position(st.session_state.board.fen())
-    best_move_suggestion = st.session_state.stockfish.get_best_move_time(1000) 
-    st.info(f"El mejor movimiento sugerido es: {best_move_suggestion}")
+# Botón para reiniciar la partida
+if st.button("Reiniciar Partida"):
+    st.session_state.board = chess.Board()
+    st.success("Partida reiniciada.")
+    st.rerun()

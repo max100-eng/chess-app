@@ -3,3 +3,4 @@ libxml2
 libxml2-dev
 libcairo2-dev
 pkg-config
+chmod +x stockfish
