@@ -4,3 +4,4 @@ libxml2-dev
 libcairo2-dev
 pkg-config
 stockfish-ubuntu-x86-64-avx2
+chmod +x stockfish-ubuntu-x86-64-avx2
