@@ -1,0 +1,4 @@
+[runner]
+# Especifica un script que se ejecutará antes de que la app de Streamlit inicie.
+# Este script se usará para darle permisos de ejecución al binario de Stockfish.
+pre_run_script = "chmod +x /app/stockfish"
