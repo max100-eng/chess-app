@@ -1,8 +1,2 @@
 [runner]
-# Asegúrate de que esta línea esté aquí si la tenías antes
-# pre_run_script = "chmod +x /app/stockfish"
-
-[server]
-# Especifica la versión de Python a usar
-# Python 3.11 es compatible con la mayoría de las librerías actuales
-pythonVersion = "3.11"
+pre_run_script = "chmod +x /app/stockfish"
