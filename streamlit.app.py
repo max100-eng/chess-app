@@ -12,7 +12,7 @@ from stockfish import Stockfish
 ruta_stockfish = "./stockfish"
 
 # Inicializa el motor de Stockfish
-engine = Stockfish(path=ruta_stockfish)
+engine = Stockfish(path=./stockfish)
 
 # --- FUNCIÓN PARA INICIALIZAR EL MOTOR STOCKFISH ---
 @st.cache_resource
