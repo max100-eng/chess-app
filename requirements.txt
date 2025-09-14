@@ -1,6 +1,6 @@
 streamlit
 python-chess
 cairosvg
-python-stockfish
+stockfish
 
 
