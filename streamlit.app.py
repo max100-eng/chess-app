@@ -5,7 +5,14 @@ import os
 from io import BytesIO
 import chess.svg
 import cairosvg 
-import stockfish # Importa la librería python-stockfish
+from stockfish import Stockfish
+
+# Define la ruta relativa al ejecutable dentro de tu repositorio
+# Reemplaza 'bin/stockfish' con la ruta correcta si la colocaste en otro lugar
+ruta_stockfish = "./bin/stockfish"
+
+# Inicializa el motor de Stockfish
+engine = Stockfish(path=ruta_stockfish)
 
 # --- FUNCIÓN PARA INICIALIZAR EL MOTOR STOCKFISH ---
 @st.cache_resource
