@@ -19,7 +19,7 @@ def init_stockfish_engine():
     try:
         # Define la ruta relativa al ejecutable dentro de tu repositorio
         # Reemplaza './stockfish' si el archivo está en una ubicación diferente
-        ruta_stockfish = "./stockfish"
+        ruta_stockfish = "./bin/stockfish"
         
         st.info("Intentando iniciar Stockfish...")
         
