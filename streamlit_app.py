@@ -9,17 +9,17 @@ from stockfish import Stockfish
 
 # Define la ruta relativa al ejecutable dentro de tu repositorio
 # Reemplaza 'bin/stockfish' con la ruta correcta si la colocaste en otro lugar
-ruta_stockfish = "./stockfish"
+ruta_stockfish = "./bin/stockfish"
 
 # Inicializa el motor de Stockfish
 engine = Stockfish(path=ruta_stockfish)
 # --- FUNCIÓN PARA INICIALIZAR EL MOTOR STOCKFISH ---
 @st.cache_resource
-def init_stockfish_engine():
+def init_stockfish_engine()
     try:
         # Define la ruta relativa al ejecutable dentro de tu repositorio
         # Reemplaza './stockfish' si el archivo está en una ubicación diferente
-        ruta_stockfish = "./stockfish"
+        ruta_stockfish = "./bin/stockfish"
         
         st.info("Intentando iniciar Stockfish...")
         
