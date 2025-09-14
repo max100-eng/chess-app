@@ -15,7 +15,8 @@ ruta_stockfish = "./bin/stockfish"
 engine = Stockfish(path=ruta_stockfish)
 # --- FUNCIÓN PARA INICIALIZAR EL MOTOR STOCKFISH ---
 @st.cache_resource
-def init_stockfish_engine()
+def init_stockfish_engine():
+    # your function code here
     try:
         # Define la ruta relativa al ejecutable dentro de tu repositorio
         # Reemplaza './stockfish' si el archivo está en una ubicación diferente
