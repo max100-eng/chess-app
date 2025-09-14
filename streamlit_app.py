@@ -6,7 +6,6 @@ from io import BytesIO
 import chess.svg
 import cairosvg 
 from stockfish import Stockfish
-<<<<<<<< HEAD:streamlit_app.py
 
 # Define la ruta relativa al ejecutable dentro de tu repositorio
 # Reemplaza 'bin/stockfish' con la ruta correcta si la colocaste en otro lugar
@@ -14,9 +13,6 @@ ruta_stockfish = "./stockfish"
 
 # Inicializa el motor de Stockfish
 engine = Stockfish(path=ruta_stockfish)
-========
->>>>>>>> 7ab35382eb9212bc71c1a270e3a036c605f864e6:streamlit.app.py
-
 # --- FUNCIÓN PARA INICIALIZAR EL MOTOR STOCKFISH ---
 @st.cache_resource
 def init_stockfish_engine():
