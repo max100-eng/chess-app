@@ -1,6 +1,6 @@
 streamlit
 python-chess
 cairosvg
-python-stockfish==3.2.0 # Si aún da problemas, prueba sin el ==3.2.0 para ver si instala otra compatible.
+stockfish
 
 
