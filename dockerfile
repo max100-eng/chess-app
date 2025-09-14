@@ -11,7 +11,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
 
 # Concede permisos de ejecución al binario de Stockfish
-RUN chmod +x ./bin/stockfish
+RUN chmod +x ./stockfish
 
 # Comando para ejecutar tu aplicación Streamlit
 CMD ["streamlit", "run", "streamlit.app.py"]
