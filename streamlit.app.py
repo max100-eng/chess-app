@@ -7,30 +7,35 @@ import chess.svg
 import cairosvg 
 from stockfish import Stockfish
 
-# Define la ruta relativa al ejecutable dentro de tu repositorio
-# Reemplaza 'bin/stockfish' con la ruta correcta si la colocaste en otro lugar
-ruta_stockfish = "./stockfish"
-
-# Inicializa el motor de Stockfish
-engine = Stockfish(path=./stockfish)
-
 # --- FUNCIÓN PARA INICIALIZAR EL MOTOR STOCKFISH ---
 @st.cache_resource
 def init_stockfish_engine():
-    st.info("Intentando iniciar Stockfish a través de la librería python-stockfish...")
     try:
-        # Crea una instancia de Stockfish. La librería se encarga de encontrar el binario.
-        stockfish_engine = stockfish.Stockfish()
+        # Define la ruta relativa al ejecutable dentro de tu repositorio
+        # Reemplaza './stockfish' si el archivo está en una ubicación diferente
+        ruta_stockfish = "./stockfish"
+        
+        st.info("Intentando iniciar Stockfish...")
+        
+        # Crea una instancia de Stockfish.
+        stockfish_engine = Stockfish(path=ruta_stockfish)
         
         # Opcional: Establecer un nivel de fuerza (valor entre 1 y 20)
         stockfish_engine.set_skill_level(10)
         
         st.success("Stockfish iniciado correctamente.")
-        return stockfish_engine # Devuelve el objeto Stockfish
-    except Exception as e:
-        st.error(f"Error al iniciar Stockfish: {e}. "
-                 "Asegúrate de que la librería 'python-stockfish' se instaló correctamente.")
+        return stockfish_engine  # Devuelve el objeto Stockfish
+    except FileNotFoundError:
+        st.error(f"Error: El ejecutable de Stockfish no se encuentra en la ruta: '{ruta_stockfish}'."
+                 " Asegúrate de haberlo subido a tu repositorio y de que la ruta sea correcta.")
         st.stop()
+    except Exception as e:
+        st.error(f"Error al iniciar Stockfish: {e}.")
+        st.stop()
+
+# Inicializa el motor al inicio de la aplicación
+# La función se ejecuta una sola vez gracias a @st.cache_resource
+engine = init_stockfish_engine()
 
 # --- FUNCIÓN PARA GENERAR LA IMAGEN DEL TABLERO ---
 def get_board_image(board):
