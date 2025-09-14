@@ -9,7 +9,7 @@ from stockfish import Stockfish
 
 # Define la ruta relativa al ejecutable dentro de tu repositorio
 # Reemplaza 'bin/stockfish' con la ruta correcta si la colocaste en otro lugar
-ruta_stockfish = "stockfish"
+ruta_stockfish = "./stockfish"
 
 # Inicializa el motor de Stockfish
 engine = Stockfish(path=ruta_stockfish)
